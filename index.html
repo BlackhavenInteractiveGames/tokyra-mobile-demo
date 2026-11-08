@@ -26,7 +26,7 @@
 </head>
 <body>
 <div id="scene"></div>
-<div id="loading"><div>TOKYRA<small>EVERY LIFE HAS A STORY · SINGLE STREET DEMO</small><div id="loadbar"><i></i></div></div></div>
+<div id="loading"><div>TOKYRA<small>EVERY LIFE HAS A STORY · SINGLE STREET · MOBILE DEMO</small><div id="loadbar"><i></i></div></div></div>
 <div id="hud">
  <div id="brand" class="glass"><div id="brandmark">T</div><div><strong>TOKYRA</strong><small>EVERY LIFE HAS A STORY</small></div></div>
  <div id="wallet" class="glass">WALLET　<b>¥ 6.840.000</b></div>
@@ -42,7 +42,7 @@
  <div id="hint">W / ↑ GAS　 A / D LENKEN　 S / ↓ BREMSEN</div>
 </div>
 <div id="toast"></div>
-<div id="error"><div><h2>TOKYRA konnte die 3D-Assets nicht laden.</h2><p>Bitte prüfe die Internetverbindung und öffne die Demo über eine gehostete HTTPS-Adresse (zum Beispiel GitHub Pages). Bei direktem Öffnen als lokale Datei blockieren manche Browser externe 3D-Module.</p><button onclick="location.reload()">Erneut laden</button></div></div>
+<div id="error"><div><h2>TOKYRA konnte die 3D-Modelle nicht laden.</h2><p>Im GitHub-Repository müssen <b>character.glb</b> und <b>car.glb</b> direkt neben der index.html liegen. Bitte prüfe die Dateinamen und lade die Seite danach erneut.</p><p id="errorDetail" style="font-size:11px;color:#ffb8e8"></p><button onclick="location.reload()">Erneut laden</button></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -109,8 +109,8 @@ const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THR
 
 // Load a real CC0 character mesh and a high-detail, unbranded CC0 sports car GLB.
 const loader=new GLTFLoader();let character=null,carRoot=null,carModel=null,carMixer=null,carClips=[],wheelNodes=[];
-const characterURL='https://files.innerscene.com/library/one-hand-on-hip-3d-person-standing-7d13068a/4b09ab36f6ca4de8de93/standing-one-hand-hip.glb';
-const carURL='https://jaronkbragg7337.github.io/spectral-gt-rs/spectral_gt_rs_game_ready.glb';
+const characterURL='./character.glb';
+const carURL='./car.glb';
 let mode='onfoot',heading=0,speed=0,walkX=0,driveDistance=0;
 const key={left:false,right:false,gas:false,brake:false,walkL:false,walkR:false};
 function addCyberDetails(group,bounds){const h=bounds.max.y-bounds.min.y;const y=bounds.min.y+h*.61;const x=.31*(h/1.71);for(const s of [-1,1]){const cuff=new THREE.Mesh(new THREE.TorusGeometry(.095*(h/1.71),.018*(h/1.71),8,18),new THREE.MeshStandardMaterial({color:0x26232f,metalness:.8,roughness:.25,emissive:0x3d0f38,emissiveIntensity:.5}));cuff.rotation.x=Math.PI/2;cuff.position.set(s*x,y,.025);group.add(cuff);const glow=new THREE.Mesh(new THREE.BoxGeometry(.035,.22,.035),new THREE.MeshBasicMaterial({color:0xff3fc7}));glow.position.set(s*x,y,.04);group.add(glow)}const core=new THREE.Mesh(new THREE.BoxGeometry(.19,.15,.07),new THREE.MeshStandardMaterial({color:0x1c1c2b,metalness:.8,roughness:.25,emissive:0x9d1a82,emissiveIntensity:1.4}));core.position.set(0,bounds.min.y+h*.78,.2);group.add(core)}
@@ -151,7 +151,7 @@ function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDel
 }
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 try{await loadAssets();$('loading').style.display='none';carRoot.visible=false;camera.position.set(-1.0,3.0,14.5);camera.lookAt(.25,1.0,5.0);toast('Willkommen in TOKYRA. Steig ein!');animate();}
-catch(err){console.error(err);$('loading').style.display='none';$('error').style.display='grid'}
+catch(err){console.error('TOKYRA asset loading failed:',err);$('loading').style.display='none';$('errorDetail').textContent='Technischer Hinweis: '+(err?.message||String(err));$('error').style.display='grid'}
 </script>
 </body>
 </html>
