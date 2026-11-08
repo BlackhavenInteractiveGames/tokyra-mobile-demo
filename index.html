@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#080a13">
+<title>TOKYRA – Every Life Has a Story</title>
+<style>
+:root{--pink:#ff48c8;--cyan:#56e9ff;--gold:#f8cf62;--panel:rgba(8,11,20,.82);--line:rgba(255,255,255,.15)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070e;color:#f5f7fb;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none;-webkit-user-select:none;user-select:none}#scene{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#1a1831,#05070e 65%);font-weight:900;letter-spacing:.24em;text-align:center}#loading small{display:block;color:#94a6c4;font-weight:500;font-size:10px;letter-spacing:.16em;margin-top:10px}#loadbar{height:3px;width:190px;background:#1e293a;margin:18px auto 0;overflow:hidden}#loadbar i{display:block;height:100%;width:15%;background:linear-gradient(90deg,var(--pink),var(--cyan));animation:load 1.6s ease-in-out infinite}@keyframes load{to{transform:translateX(190px)}}
+#hud{position:fixed;inset:0;pointer-events:none}.glass{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 7px 24px #0007;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#brand{position:absolute;left:14px;top:max(12px,env(safe-area-inset-top));padding:9px 12px;display:flex;align-items:center;gap:9px}#brandmark{width:24px;height:24px;border:1px solid var(--pink);display:grid;place-items:center;color:var(--pink);font-weight:900;transform:skew(-10deg)}#brand strong{font-size:14px;letter-spacing:.18em}#brand small{display:block;font-size:8px;letter-spacing:.19em;color:#9eacc2;margin-top:2px}
+#wallet{position:absolute;right:14px;top:max(12px,env(safe-area-inset-top));padding:9px 12px;font-size:12px;letter-spacing:.03em}#wallet b{color:var(--gold);font-size:14px}
+#mission{position:absolute;left:14px;top:70px;width:244px;padding:11px 12px}#mission .label{font-size:10px;color:var(--pink);letter-spacing:.14em;font-weight:800;margin-bottom:7px}#mission strong{font-size:12px;font-weight:750}#mission p{font-size:10px;color:#c1cada;line-height:1.45;margin:5px 0 0}
+#prompt{position:absolute;left:50%;top:17%;transform:translateX(-50%);white-space:nowrap;padding:8px 13px;font-size:11px;color:#fff;border:1px solid #a143a5;background:#090914d9;border-radius:20px;opacity:0;transition:.25s}#prompt.show{opacity:1}
+#action{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);pointer-events:auto;border:1px solid #ed69d3;background:linear-gradient(110deg,#4d164d,#141327);color:#fff;border-radius:13px;padding:12px 18px;font-weight:800;font-size:12px;letter-spacing:.07em;box-shadow:0 8px 25px #0008;touch-action:manipulation}#action:active{transform:translateX(-50%) scale(.97)}#action span{color:#ff9be7;margin-right:7px}
+#walk-controls{position:absolute;left:16px;bottom:calc(18px + env(safe-area-inset-bottom));display:flex;gap:7px;pointer-events:auto}#drive-controls{display:none;position:absolute;inset:0;pointer-events:none}#steering{position:absolute;left:16px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;gap:8px;pointer-events:auto}#pedals{position:absolute;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;gap:8px;pointer-events:auto}
+.control{width:54px;height:54px;border:1px solid #ffffff45;border-radius:50%;background:#0a1020c9;color:#fff;font-size:20px;display:grid;place-items:center;box-shadow:0 5px 16px #0008;touch-action:none}.control:active{background:#3a1a4f}.pedal{width:60px;height:60px;border-radius:15px;border:1px solid #b55cdb;background:#120d20e8;color:#fff;font-size:19px;touch-action:none}
+#telemetry{position:absolute;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:9px 15px;min-width:160px;text-align:center;font:10px ui-monospace,monospace;letter-spacing:.12em;color:#c6d8eb;display:none}#telemetry b{font-size:22px;color:white;letter-spacing:0;margin-right:4px}#telemetry span{color:var(--cyan)}
+#toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 16px;border:1px solid var(--pink);border-radius:12px;background:#080b16ed;font-size:12px;text-align:center;z-index:22;opacity:0;transition:.2s;pointer-events:none;max-width:85vw}#toast.show{opacity:1}
+#hint{position:absolute;right:14px;bottom:calc(19px + env(safe-area-inset-bottom));font-size:9px;color:#a8b3c7;letter-spacing:.1em;text-align:right;display:none}
+#error{display:none;position:fixed;inset:0;z-index:30;place-items:center;background:#090b14;color:#fff;padding:24px;text-align:center}#error div{max-width:440px}#error p{color:#b9c5d8;font-size:13px;line-height:1.55}#error button{background:#301433;color:white;border:1px solid #d65ac5;border-radius:10px;padding:10px 14px}
+@media(orientation:portrait){#mission{top:68px;width:205px;padding:8px 9px}#mission p{font-size:9px}#brand strong{font-size:12px}#wallet{font-size:10px}#action{bottom:calc(90px + env(safe-area-inset-bottom));font-size:11px;padding:11px 13px}#walk-controls{bottom:calc(16px + env(safe-area-inset-bottom))}.control{width:48px;height:48px}#telemetry{bottom:calc(90px + env(safe-area-inset-bottom))}#steering{bottom:calc(16px + env(safe-area-inset-bottom))}#pedals{bottom:calc(16px + env(safe-area-inset-bottom))}.pedal{width:52px;height:52px}}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="loading"><div>TOKYRA<small>EVERY LIFE HAS A STORY · SINGLE STREET DEMO</small><div id="loadbar"><i></i></div></div></div>
+<div id="hud">
+ <div id="brand" class="glass"><div id="brandmark">T</div><div><strong>TOKYRA</strong><small>EVERY LIFE HAS A STORY</small></div></div>
+ <div id="wallet" class="glass">WALLET　<b>¥ 6.840.000</b></div>
+ <div id="mission" class="glass"><div class="label">▶ AKTIVE SZENE</div><strong id="sceneTitle">AKIHABARA · NIGHT DRIVE</strong><p id="sceneSub">Steig in den KAIRO S1 und fahr die Straße entlang.</p></div>
+ <div id="prompt">E · EINSTEIGEN</div>
+ <div id="walk-controls"><button class="control" id="walkLeft">◀</button><button class="control" id="walkRight">▶</button></div>
+ <button id="action"><span>✦</span><b id="actionText">INS AUTO EINSTEIGEN</b></button>
+ <div id="drive-controls">
+  <div id="steering"><button class="control" id="driveLeft">◀</button><button class="control" id="driveRight">▶</button></div>
+  <div id="pedals"><button class="pedal" id="brake">▼</button><button class="pedal" id="gas">▲</button></div>
+ </div>
+ <div id="telemetry" class="glass"><b id="speed">000</b> <span>KM/H</span>　·　KAIRO S1</div>
+ <div id="hint">W / ↑ GAS　 A / D LENKEN　 S / ↓ BREMSEN</div>
+</div>
+<div id="toast"></div>
+<div id="error"><div><h2>TOKYRA konnte die 3D-Assets nicht laden.</h2><p>Bitte prüfe die Internetverbindung und öffne die Demo über eine gehostete HTTPS-Adresse (zum Beispiel GitHub Pages). Bei direktem Öffnen als lokale Datei blockieren manche Browser externe 3D-Module.</p><button onclick="location.reload()">Erneut laden</button></div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+
+const $=id=>document.getElementById(id), root=$('scene');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x090a16);scene.fog=new THREE.FogExp2(0x090a16,.0085);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,260);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;root.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xaab9e8,0x171421,1.65));
+const moon=new THREE.DirectionalLight(0x9caeff,2.1);moon.position.set(-18,32,10);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);scene.add(moon);
+const magenta=new THREE.PointLight(0xff32b7,55,55);magenta.position.set(-7,7,-12);scene.add(magenta);
+const cyan=new THREE.PointLight(0x24dfff,38,48);cyan.position.set(9,7,-35);scene.add(cyan);
+const warm=new THREE.PointLight(0xffa75c,22,30);warm.position.set(-4,4,24);scene.add(warm);
+const mat=(c,r=.6,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const box=(parent,w,h,d,material,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
+
+// Create a wet asphalt surface with fine grain and long rain-polished streaks.
+function asphaltTexture(){const c=document.createElement('canvas');c.width=512;c.height=1024;const g=c.getContext('2d');g.fillStyle='#24232d';g.fillRect(0,0,c.width,c.height);for(let i=0;i<24000;i++){const x=Math.random()*512,y=Math.random()*1024,a=Math.random()*.16;g.fillStyle=`rgba(${120+Math.random()*70|0},${115+Math.random()*55|0},${130+Math.random()*70|0},${a})`;g.fillRect(x,y,Math.random()*2+.3,Math.random()*4+.3)}for(let i=0;i<70;i++){const x=Math.random()*512;g.strokeStyle=`rgba(170,178,205,${Math.random()*.045})`;g.lineWidth=Math.random()*2+0.3;g.beginPath();g.moveTo(x,0);g.lineTo(x+(Math.random()-.5)*20,1024);g.stroke()}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,10);t.colorSpace=THREE.SRGBColorSpace;return t}
+const asphalt=mat(0x77717f,.26,.18);asphalt.map=asphaltTexture();
+const ground= new THREE.Mesh(new THREE.PlaneGeometry(180,260),mat(0x151724,.88,.05));ground.rotation.x=-Math.PI/2;ground.position.y=-.16;ground.receiveShadow=true;scene.add(ground);
+const road=new THREE.Mesh(new THREE.PlaneGeometry(15,250),asphalt);road.rotation.x=-Math.PI/2;road.position.y=-.08;road.receiveShadow=true;scene.add(road);
+const pavementMat=mat(0x4a4650,.62,.1);
+for(const side of [-1,1]){const pavement=new THREE.Mesh(new THREE.PlaneGeometry(4,250),pavementMat);pavement.rotation.x=-Math.PI/2;pavement.position.set(side*9.5,-.035,0);pavement.receiveShadow=true;scene.add(pavement);}
+const curbMat=mat(0x77717b,.42,.16);
+for(const side of [-1,1]){box(scene,.22,.22,250,curbMat,side*7.55,.04,0);}
+const lanePaint=new THREE.MeshBasicMaterial({color:0xd3c8ab});
+for(let z=-120;z<125;z+=14){const mark=box(scene,.12,.016,5,lanePaint,0,.012,z);mark.castShadow=false;}
+const edgeLine=new THREE.MeshBasicMaterial({color:0xe1c979});for(const side of [-1,1]){const stripe=box(scene,.1,.018,250,edgeLine,side*6.9,.02,0);stripe.castShadow=false;}
+
+// Facade texture atlases give each street block real window/shop detail rather than blank cubes.
+function facadeTexture(seed,shopName,accent){const c=document.createElement('canvas');c.width=1024;c.height=1024;const g=c.getContext('2d');
+ const grad=g.createLinearGradient(0,0,0,1024);grad.addColorStop(0,'#1a1d2b');grad.addColorStop(.56,'#222332');grad.addColorStop(.57,'#15141e');grad.addColorStop(1,'#090d18');g.fillStyle=grad;g.fillRect(0,0,1024,1024);
+ // top floor window bays
+ for(let row=0;row<5;row++)for(let col=0;col<8;col++){const x=22+col*126,y=35+row*105,w=90,h=70;g.fillStyle='#080d18';g.fillRect(x-5,y-5,w+10,h+10);const glow=Math.random()>.28;g.fillStyle=glow?(Math.random()>.5?'#b6a4a0':'#7cb4c2'):'#17202e';g.fillRect(x,y,w,h);if(glow){g.fillStyle='rgba(255,213,173,.25)';g.fillRect(x,y,w,7);g.fillStyle='rgba(20,30,48,.55)';g.fillRect(x+w/2-2,y,4,h)}}
+ // fascia and storefront lower level
+ g.fillStyle='#080c16';g.fillRect(0,570,1024,454);g.fillStyle=accent;g.globalAlpha=.8;g.fillRect(0,575,1024,7);g.globalAlpha=1;
+ for(let i=0;i<4;i++){const x=22+i*253;g.fillStyle='#162536';g.fillRect(x,635,225,345);g.fillStyle='#6e8b9b';g.globalAlpha=.35;g.fillRect(x+6,641,213,330);g.globalAlpha=1;g.fillStyle='#101522';g.fillRect(x+105,635,5,345);g.fillStyle='rgba(255,255,255,.12)';g.fillRect(x+9,646,6,320)}
+ g.shadowColor=accent;g.shadowBlur=28;g.fillStyle=accent;g.font='bold 62px Arial';g.textAlign='center';g.fillText(shopName,512,630);g.shadowBlur=0;g.fillStyle='#e8d9ea';g.font='24px Arial';g.fillText('TOKYRA  ·  URBAN DISTRICT',512,669);
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return tex;}
+const facadeNames=[['KAIRO WORKS','#ff4bc9'],['NEON MARKET','#43dfff'],['SYNTH LAB','#f8c56a'],['TOKYRA STYLE','#ff59af'],['MIDNIGHT CAFE','#56e6f0'],['ORBIT TECH','#b18bff']];
+function building(side,z,index,width=14,height=23){const g=new THREE.Group();g.position.set(side*14,0,z);scene.add(g);const depth=12;const bodyMat=mat([0x282938,0x222736,0x29242f,0x202b37][index%4],.78,.12);box(g,depth,height,width,bodyMat,side*6.1,height/2,0);
+ const wall=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshStandardMaterial({map:facadeTexture(index,...facadeNames[index%facadeNames.length]),roughness:.72,metalness:.12,emissive:new THREE.Color(0x10101b),emissiveIntensity:.25}));wall.position.set(0,height/2,0);wall.rotation.y=side===-1?Math.PI/2:-Math.PI/2;wall.position.x=-side*0.06;g.add(wall);
+ // side facade with lit narrow windows
+ const sideWall=new THREE.Mesh(new THREE.PlaneGeometry(depth,height),new THREE.MeshStandardMaterial({color:0x202634,roughness:.7,metalness:.08}));sideWall.position.set(side*12.15,height/2,0);sideWall.rotation.y=side===-1?0:Math.PI;g.add(sideWall);
+ box(g,.25,.25,width+.3,mat(0x101320,.45,.5),0,height+.1,0);
+ const signLight=new THREE.PointLight(index%2?0x39dcff:0xff45bc,15,20);signLight.position.set(-side*1.5,8,0);g.add(signLight);
+ return g;}
+let id=0;for(let z=-100;z<130;z+=22){building(-1,z,id++);building(1,z+9,id++);}
+
+// Street details: lamp posts, vending machines, glowing signboards, rails and sakura planters.
+const poleMat=mat(0x303440,.35,.8);
+function lamp(x,z,color){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,.13,5.3,.13,poleMat,0,2.65,0);box(g,1.1,.1,.12,poleMat,x>0?-.42:.42,5.2,0);const bulb=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),new THREE.MeshBasicMaterial({color}));bulb.position.set(x>0?-.88:.88,5.16,0);g.add(bulb);const l=new THREE.PointLight(color,9,13);l.position.copy(bulb.position);g.add(l)}
+for(let z=-90;z<120;z+=24){lamp(-8.1,z,0x4ce4ff);lamp(8.1,z+11,0xff4ac7)}
+function vending(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,.9,1.9,.6,mat(0x171d2a,.35,.5),0,.95,0);box(g,.72,1.05,.025,mat(0x102b40,.18,.4),0,1.15,.315);for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.PlaneGeometry(.09,.3),new THREE.MeshBasicMaterial({color:[0xff76cb,0x5ce6ff,0xffcd6b,0x9e82ff][i%4]}));c.position.set(-.25+i*.12,1.2,.34);g.add(c)}const bulb=new THREE.PointLight(0x4acfff,4,4);bulb.position.set(0,1.5,.5);g.add(bulb)}
+vending(-7.6,13);vending(7.6,-31);vending(-7.6,-75);
+function overheadSign(z,label,color){const g=new THREE.Group();g.position.set(0,0,z);scene.add(g);box(g,.09,2,.09,poleMat,-6.3,7,0);box(g,.09,2,.09,poleMat,6.3,7,0);box(g,13,.1,.12,poleMat,0,8,0);const c=document.createElement('canvas');c.width=768;c.height=150;const ctx=c.getContext('2d');ctx.fillStyle='#102134';ctx.fillRect(0,0,768,150);ctx.strokeStyle=color;ctx.lineWidth=9;ctx.strokeRect(5,5,758,140);ctx.font='bold 58px Arial';ctx.textAlign='center';ctx.fillStyle='#f7f2f8';ctx.fillText(label,384,96);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(8,1.55),new THREE.MeshBasicMaterial({map:t}));m.position.set(0,8.1,0);g.add(m)}
+overheadSign(-43,'AKIHABARA   /   TOKYRA', '#ff4bc7');overheadSign(49,'NIGHT DISTRICT  →', '#47e6ff');
+
+// Subtle rain streaks and atmospheric ground reflections
+const rainCount=850, rainPos=new Float32Array(rainCount*3);for(let i=0;i<rainCount;i++){rainPos[i*3]=(Math.random()-.5)*34;rainPos[i*3+1]=Math.random()*18;rainPos[i*3+2]=(Math.random()-.5)*170}
+const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xb4d5f8,size:.035,transparent:true,opacity:.58}));scene.add(rain);
+
+// Load a real CC0 character mesh and a high-detail, unbranded CC0 sports car GLB.
+const loader=new GLTFLoader();let character=null,carRoot=null,carModel=null,carMixer=null,carClips=[],wheelNodes=[];
+const characterURL='https://files.innerscene.com/library/one-hand-on-hip-3d-person-standing-7d13068a/4b09ab36f6ca4de8de93/standing-one-hand-hip.glb';
+const carURL='https://jaronkbragg7337.github.io/spectral-gt-rs/spectral_gt_rs_game_ready.glb';
+let mode='onfoot',heading=0,speed=0,walkX=0,driveDistance=0;
+const key={left:false,right:false,gas:false,brake:false,walkL:false,walkR:false};
+function addCyberDetails(group,bounds){const h=bounds.max.y-bounds.min.y;const y=bounds.min.y+h*.61;const x=.31*(h/1.71);for(const s of [-1,1]){const cuff=new THREE.Mesh(new THREE.TorusGeometry(.095*(h/1.71),.018*(h/1.71),8,18),new THREE.MeshStandardMaterial({color:0x26232f,metalness:.8,roughness:.25,emissive:0x3d0f38,emissiveIntensity:.5}));cuff.rotation.x=Math.PI/2;cuff.position.set(s*x,y,.025);group.add(cuff);const glow=new THREE.Mesh(new THREE.BoxGeometry(.035,.22,.035),new THREE.MeshBasicMaterial({color:0xff3fc7}));glow.position.set(s*x,y,.04);group.add(glow)}const core=new THREE.Mesh(new THREE.BoxGeometry(.19,.15,.07),new THREE.MeshStandardMaterial({color:0x1c1c2b,metalness:.8,roughness:.25,emissive:0x9d1a82,emissiveIntensity:1.4}));core.position.set(0,bounds.min.y+h*.78,.2);group.add(core)}
+async function loadAssets(){
+ const [char,vehicle]=await Promise.all([loader.loadAsync(characterURL),loader.loadAsync(carURL)]);
+ character=new THREE.Group();character.add(char.scene);const cb=new THREE.Box3().setFromObject(char.scene);const size=cb.getSize(new THREE.Vector3());const scale=1.72/size.y;character.scale.setScalar(scale);const scaledBounds=new THREE.Box3().setFromObject(character);character.position.y-=scaledBounds.min.y;character.position.set(-1.35,0,4.8);character.rotation.y=0;character.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){o.material.needsUpdate=true}}});addCyberDetails(character,scaledBounds);scene.add(character);
+ carRoot=new THREE.Group();scene.add(carRoot);carModel=vehicle.scene;carModel.rotation.y=-Math.PI/2;const bb=new THREE.Box3().setFromObject(carModel);carModel.position.y-=bb.min.y;carModel.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.name.toLowerCase().includes('tire')||o.name.toLowerCase().includes('wheel'))wheelNodes.push(o)}});carRoot.add(carModel);carRoot.position.set(2.35,0,5.4);carRoot.rotation.y=0;carClips=vehicle.animations||[];carMixer=carClips.length?new THREE.AnimationMixer(carModel):null;
+}
+
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),1700)}
+function setButton(){if(mode==='onfoot'){$('actionText').textContent='INS AUTO EINSTEIGEN';$('action').querySelector('span').textContent='✦'}else{$('actionText').textContent='AUSSTEIGEN';$('action').querySelector('span').textContent='↩'}}
+function enterCar(){if(mode!=='onfoot')return;mode='drive';character.visible=false;carRoot.visible=true;carRoot.position.set(0,0,5.4);heading=0;speed=0;$('walk-controls').style.display='none';$('drive-controls').style.display='block';$('telemetry').style.display='block';$('hint').style.display='block';$('sceneTitle').textContent='KAIRO S1 · DRIVE MODE';$('sceneSub').textContent='Fahre die TOKYRA Street entlang. Tippe Gas und lenke mit den Touch-Tasten.';setButton();toast('KAIRO S1 · READY');}
+function exitCar(){if(mode!=='drive')return;mode='onfoot';speed=0;carRoot.visible=false;character.visible=true;character.position.set(-1.35,0,4.8);character.rotation.y=0;$('walk-controls').style.display='flex';$('drive-controls').style.display='none';$('telemetry').style.display='none';$('hint').style.display='none';$('sceneTitle').textContent='AKIHABARA · NIGHT DRIVE';$('sceneSub').textContent='Steig in den KAIRO S1 und fahr die Straße entlang.';setButton();toast('Du bist ausgestiegen.');}
+$('action').addEventListener('click',()=>mode==='onfoot'?enterCar():exitCar());
+function bindHold(id,k){const el=$(id);const down=e=>{e.preventDefault();key[k]=true};const up=e=>{e.preventDefault();key[k]=false};el.addEventListener('pointerdown',down);['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,up));}
+bindHold('driveLeft','left');bindHold('driveRight','right');bindHold('gas','gas');bindHold('brake','brake');bindHold('walkLeft','walkL');bindHold('walkRight','walkR');
+addEventListener('keydown',e=>{const map={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'gas',w:'gas',ArrowDown:'brake',s:'brake'};if(map[e.key]){key[map[e.key]]=true;e.preventDefault()}if(e.key==='e'||e.key==='E'||e.key==='Enter'){mode==='onfoot'?enterCar():exitCar()}});
+addEventListener('keyup',e=>{const map={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'gas',w:'gas',ArrowDown:'brake',s:'brake'};if(map[e.key])key[map[e.key]]=false});
+
+const clock=new THREE.Clock();const forward=new THREE.Vector3(),desired=new THREE.Vector3(),lookAt=new THREE.Vector3();let cameraReady=false;
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);const rainA=rainGeo.attributes.position.array;for(let i=0;i<rainCount;i++){rainA[i*3+1]-=dt*15;if(rainA[i*3+1]<0){rainA[i*3+1]=18;rainA[i*3]=(Math.random()-.5)*34;rainA[i*3+2]=(Math.random()-.5)*170}}rainGeo.attributes.position.needsUpdate=true;
+ if(mode==='onfoot'){
+  if(key.walkL)walkX=Math.max(-2,walkX-dt*1.8);if(key.walkR)walkX=Math.min(2,walkX+dt*1.8);character.position.x=-1.35+walkX;
+  desired.set(-1.0,3.0,14.5);lookAt.set(.25,1.0,5.0);
+ }else{
+  if(key.gas)speed=Math.min(25,speed+dt*10.5);else if(key.brake)speed=Math.max(-4,speed-dt*17);else speed*=Math.pow(.23,dt);
+  const steerInput=(key.right?1:0)-(key.left?1:0);heading+=steerInput*speed*.009*dt;
+  forward.set(Math.sin(heading),0,Math.cos(heading));carRoot.position.addScaledVector(forward,speed*dt);
+  carRoot.position.x=THREE.MathUtils.clamp(carRoot.position.x,-4.8,4.8);
+  if(carRoot.position.z>116){carRoot.position.z=-112;driveDistance+=1}if(carRoot.position.z< -116){carRoot.position.z=112;driveDistance+=1}
+  carRoot.rotation.y=heading;
+  wheelNodes.forEach(w=>w.rotation.y+=speed*dt*2.2);if(carMixer)carMixer.update(dt);
+  desired.copy(carRoot.position).addScaledVector(forward,-7.2);desired.y+=3.0;lookAt.copy(carRoot.position).addScaledVector(forward,4.2);lookAt.y+=.9;
+  $('speed').textContent=String(Math.round(Math.abs(speed)*3.6)).padStart(3,'0');
+ }
+ if(!cameraReady){camera.position.copy(desired);cameraReady=true}else camera.position.lerp(desired,1-Math.pow(.0008,dt));camera.lookAt(lookAt);
+ renderer.render(scene,camera);
+}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+try{await loadAssets();$('loading').style.display='none';carRoot.visible=false;camera.position.set(-1.0,3.0,14.5);camera.lookAt(.25,1.0,5.0);toast('Willkommen in TOKYRA. Steig ein!');animate();}
+catch(err){console.error(err);$('loading').style.display='none';$('error').style.display='grid'}
+</script>
+</body>
+</html>
